@@ -1,1 +1,1 @@
-web: gunicorn app:server
+web: gunicorn src.ia1:server
