@@ -1,5 +1,5 @@
 import altair as alt
-from dash import Dash, html, dcc, Input, Output
+from dash import Dash, dcc, html, Input, Output
 from gapminder import gapminder
 
 # Read in global data
