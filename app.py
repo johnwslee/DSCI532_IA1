@@ -165,7 +165,7 @@ def get_para(year, col):
                      'gdpPercap': 'GDP per Capita'
                     }
     
-    col_max_scale_dict = {'lifeExp': 300,
+    col_max_scale_dict = {'lifeExp': 1000,
                           'pop': 2000,
                           'gdpPercap': 500
                          }
@@ -200,7 +200,8 @@ def plot_world(year, col): # col = ['lifeExp', 'pop', 'gdpPercap']
         longitude='lon:Q',
         latitude='lat:Q',
         size = alt.Size(col, legend=None, scale=alt.Scale(range=[0, max_scale])),
-        color = alt.Color('continent', legend=None)
+        color = alt.Color('continent', legend=None),
+        tooltip=['country', col]
     )
     
     text_year = alt.Chart({'values':[{}]}).mark_text(
