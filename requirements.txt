@@ -6,3 +6,5 @@ dash
 dash_bootstrap_components
 vega_datasets
 plotly
+numpy
+plotly_express
