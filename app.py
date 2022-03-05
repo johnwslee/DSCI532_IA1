@@ -10,6 +10,7 @@ gapminder = gapminder
 
 # Setup app and layout/frontend
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
 
 years = gapminder.year.unique()
 
