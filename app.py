@@ -7,6 +7,7 @@ from vega_datasets import data
 
 # Read in global data
 gapminder = gapminder
+df_pos = pd.read_csv('data/world_country.csv')
 
 # Setup app and layout/frontend
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -18,70 +19,200 @@ app.layout = dbc.Container(
     [
         html.H1('Our Changing World', style={'textAlign': 'center'}),
         html.Br(),
-        dbc.Row(
-            [
-                dbc.Col(
+        dcc.Tabs(
+          [
+            dcc.Tab(
+              label='World View', 
+              children=[
+                dbc.Row(
                     [
-                        html.Br(),
-                        html.Br(),
-                        html.H5('What do you want to know?'),
-                        dcc.Dropdown(
-                            id='topic_dropdown', value='pop',
-                            options=[
-                                {'label': 'Population', 'value': 'pop'},
-                                {'label': 'Life Expectancy', 'value': 'lifeExp'},
-                                {'label': 'GDP per Capita', 'value': 'gdpPercap'}
-                            ],
-                            style={'max-width': '90%'}
+                    dbc.Col(
+                        [
+                            html.Br(),
+                            html.Br(),
+                            html.H5('What do you want to know?'),
+                            dcc.Dropdown(
+                                id='topic_dropdown', value='pop',
+                                options=[
+                                    {'label': 'Population', 'value': 'pop'},
+                                    {'label': 'Life Expectancy', 'value': 'lifeExp'},
+                                    {'label': 'GDP per Capita', 'value': 'gdpPercap'}
+                                ],
+                                style={'max-width': '90%'}
+                            ),
+                            html.Br(),
+                            html.H5('Choose year'),
+                            dcc.Slider(
+                                min=1952, 
+                                max=2007, 
+                                step=5,
+                                id='year-slider',
+                                marks={int(x): {"label": str(x)} for x in list(years)},
+                                value=1957
+                            )
+                        ],
+                        md=4
+                    ),
+                    dbc.Col(
+                        [
+                            html.H3('World Map', style={'textAlign': 'center'}),
+                            html.Iframe(
+                                id='world_map',
+                                style={'border-width': '0', 'width': '100%', 'height': '500px'}
+                            )
+                        ],
+                        md=8
+                    )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3('World Ranking', style={'textAlign': 'center'}),
+                                html.Iframe(
+                                    id='ranking_chart',
+                                    style={'border-width': '0', 'width': '100%', 'height': '400px'}
+                                )
+                            ]
                         ),
-                        html.Br(),
-                        html.H5('Choose year'),
-                        dcc.Slider(
-                            min=1952, 
-                            max=2007, 
-                            step=5,
-                            id='year-slider',
-                            marks={int(x): {"label": str(x)} for x in list(years)},
-                            value=1957
+                        dbc.Col(
+                            [
+                                html.H3('World Trend', style={'textAlign': 'center'}),
+                                html.Iframe(
+                                    id='trend_chart',
+                                    style={'border-width': '0', 'width': '100%', 'height': '400px'})
+                            ]
                         )
-                    ],
-                    md=4
-                ),
-                dbc.Col(
-                    [
-                        html.H3('World Map', style={'textAlign': 'center'}),
-                        html.Iframe(
-                            id='world_map',
-                            style={'border-width': '0', 'width': '100%', 'height': '500px'}
-                        )
-                    ],
-                    md=8
+                    ]
                 )
-            ]
+              ]
+            ),
+            dcc.Tab(
+              label='Country View', 
+              children=[
+                dbc.Row(
+                    [
+                    dbc.Col(
+                        [
+                            html.Br(),
+                            html.Br(),
+                            html.H5('Which country do you want to know?'),
+                            dcc.Dropdown(
+                                id='country_dropdown', value='Canada',
+                                options=[
+                                    {'label': country, 'value': country} for country in df_pos["country"]
+                                ],
+                                style={'max-width': '90%'}
+                            ),
+                            html.Br(),
+                            html.H3('Location of Country', style={'textAlign': 'center'}),
+                            html.Iframe(
+                                id='location',
+                                style={'border-width': '0', 'width': '100%', 'height': '500px'}
+                            )
+                        ],
+                        md=5
+                    ),
+                    dbc.Col(
+                        [
+                            html.H3('Country Data', style={'textAlign': 'center'}),
+                            html.Iframe(
+                                id='country_chart',
+                                style={'border-width': '0', 'width': '100%', 'height': '800px'}
+                        )
+                        ],
+                        md=7
+                    )
+                    ]
+                )
+              ]
+            )
+          ]
         ),
-        dbc.Row(
-            [
-                dbc.Col(
-                    [
-                        html.H3('World Ranking', style={'textAlign': 'center'}),
-                        html.Iframe(
-                            id='ranking_chart',
-                            style={'border-width': '0', 'width': '100%', 'height': '400px'}
-                        )
-                    ]
-                ),
-                dbc.Col(
-                    [
-                        html.H3('World Trend', style={'textAlign': 'center'}),
-                        html.Iframe(
-                            id='trend_chart',
-                            style={'border-width': '0', 'width': '100%', 'height': '400px'})
-                    ]
-                )
-            ]
-        )
     ]
 )
+
+# Setup callbacks/backend for location chart
+@app.callback(
+    Output('location', 'srcDoc'),
+    Input('country_dropdown', 'value'),
+    )
+def plot_country(country):
+    country = country
+    world_map = alt.topo_feature(data.world_110m.url, 'countries')
+    background = alt.Chart(world_map).mark_geoshape(
+        fill='lightgray',
+        stroke='white'
+    ).properties(
+        width=450,
+        height=350
+    ).project(type='equalEarth')
+
+    df_pos = pd.read_csv('data/world_country.csv')
+    df_pos = df_pos.iloc[:, 1:4]
+    df_pos.rename(columns={'latitude': 'lat', 'longitude': 'lon'}, inplace=True)
+    
+    points = alt.Chart(df_pos.query('country == @country')).mark_point().encode(
+        longitude='lon:Q',
+        latitude='lat:Q'
+    )
+    
+    return (background + points).to_html()
+
+
+
+# Setup callbacks/backend for country data chart
+@app.callback(
+    Output('country_chart', 'srcDoc'),
+    Input('country_dropdown', 'value'),
+    )
+def plot_country_data(country):
+    country = country
+    df = gapminder.query("country == @country")
+    pop_chart = alt.Chart(df).mark_bar().encode(
+        alt.X('year:N', 
+              title="Year"),  
+        alt.Y(
+            'pop',
+            title="Population",
+        ),
+        color="country"
+        ).properties(
+            width=230,
+            height=250
+        )
+    
+    lifeExp_chart = alt.Chart(df).mark_bar().encode(
+        alt.X('year:N', 
+              title="Year"),  
+        alt.Y(
+            'lifeExp',
+            title="Life Expectancy [years]",
+            axis=alt.Axis(format=',d')
+        ),
+        color="country"
+        ).properties(
+            width=230,
+            height=250
+        )
+    
+    gdpPercap_chart = alt.Chart(df).mark_bar().encode(
+        alt.X('year:N', 
+              title="Year"),  
+        alt.Y(
+            'gdpPercap',
+            title="GDP per Capita [USD]",
+            axis=alt.Axis(format='$,d')
+        ),
+        color="country"
+        ).properties(
+            width=230,
+            height=250
+        )
+
+    return (pop_chart | lifeExp_chart & gdpPercap_chart).to_html()
+
 
 
 # Setup callbacks/backend for ranking chart
@@ -94,33 +225,37 @@ def plot_world_ranking(year, y_axis):
     year = year
     df = gapminder.query("year == @year").sort_values(by=y_axis, ascending=False)
     df["ranking"] = [f"#{i+1}" for i in range(142)]
-    bar = alt.Chart(df).mark_bar().encode(
-        alt.X(
-            y_axis,
-            title="Population" if y_axis == "pop" else (
-                "Life Expectancy [years]" if y_axis == "lifeExp" else "GDP per Capita [USD]"
-            )
-        ),
-        alt.Y('country', 
-              sort=alt.EncodingSortField('value', op='min', order='descending'),
-              title="Country"),
-        color=alt.Color("continent", legend=None),
-        tooltip=y_axis)
-
-    text = bar.mark_text(
-        align='left',
-        baseline='middle',
-        dx=3
-    ).encode(
-        text='ranking'
+    bar = (
+        alt.Chart(df)
+        .mark_bar()
+        .encode(
+            alt.X(
+                y_axis,
+                title="Population"
+                if y_axis == "pop"
+                else ("Life Expectancy (years)" if y_axis == "lifeExp" else "GDP per Capita (USD)"),
+                axis=alt.Axis(format='$,d', orient='top')
+                if y_axis == "gdpPercap"
+                else (alt.Axis(format=',d', orient='top')),
+            ),
+            alt.Y(
+                "country",
+                sort=alt.EncodingSortField("value", op="min", order="descending"),
+                title="Country",
+            ),
+            color=alt.Color("continent", legend=None),
+            tooltip=y_axis,
+        )
     )
+
+    text = bar.mark_text(align="left", baseline="middle", dx=3).encode(text="ranking")
 
     chart = bar + text
     chart_final = chart.configure_axis(
-        labelFontSize=14, titleFontSize=20
-    ).properties(
-        width=350
-    )
+      labelFontSize=14, titleFontSize=20
+      ).properties(
+        width=350)
+    
     return chart_final.to_html()
 
 
