@@ -58,6 +58,7 @@ app.layout = dbc.Container(
                     ),
                     dbc.Col(
                         [
+                            html.Br(),
                             html.H3('World Map', style={'textAlign': 'center'}),
                             html.Iframe(
                                 id='world_map',
@@ -119,6 +120,7 @@ app.layout = dbc.Container(
                     ),
                     dbc.Col(
                         [
+                            html.Br(),
                             html.H3('Country Data', style={'textAlign': 'center'}),
                             html.Iframe(
                                 id='country_chart',
@@ -169,7 +171,7 @@ def plot_country(country):
 def plot_country_data(country):
     country = country
     df = gapminder.query("country == @country")
-    pop_chart = alt.Chart(df).mark_bar().encode(
+    pop_chart = alt.Chart(df, title="Population").mark_bar().encode(
         alt.X('year:N', 
               title="Year"),  
         alt.Y(
@@ -182,7 +184,7 @@ def plot_country_data(country):
             height=250
         )
     
-    lifeExp_chart = alt.Chart(df).mark_bar().encode(
+    lifeExp_chart = alt.Chart(df, title="Life Expectancy").mark_bar().encode(
         alt.X('year:N', 
               title="Year"),  
         alt.Y(
@@ -196,7 +198,7 @@ def plot_country_data(country):
             height=250
         )
     
-    gdpPercap_chart = alt.Chart(df).mark_bar().encode(
+    gdpPercap_chart = alt.Chart(df, title="GDP per Capita").mark_bar().encode(
         alt.X('year:N', 
               title="Year"),  
         alt.Y(
