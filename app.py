@@ -8,6 +8,9 @@ from vega_datasets import data
 # Read in global data
 gapminder = gapminder
 df_pos = pd.read_csv('data/world_country.csv')
+df_pos = df_pos.iloc[:, 1:4]
+df_pos.rename(columns={'latitude': 'lat', 'longitude': 'lon'}, inplace=True)
+gapminder_pos = gapminder.merge(df_pos)
 
 # Setup app and layout/frontend
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -101,7 +104,7 @@ app.layout = dbc.Container(
                             dcc.Dropdown(
                                 id='country_dropdown', value='Canada',
                                 options=[
-                                    {'label': country, 'value': country} for country in df_pos["country"]
+                                    {'label': country, 'value': country} for country in (gapminder_pos["country"]).unique()
                                 ],
                                 style={'max-width': '90%'}
                             ),
@@ -148,12 +151,8 @@ def plot_country(country):
         width=450,
         height=350
     ).project(type='equalEarth')
-
-    df_pos = pd.read_csv('data/world_country.csv')
-    df_pos = df_pos.iloc[:, 1:4]
-    df_pos.rename(columns={'latitude': 'lat', 'longitude': 'lon'}, inplace=True)
     
-    points = alt.Chart(df_pos.query('country == @country')).mark_point().encode(
+    points = alt.Chart(gapminder_pos.query('country == @country')).mark_point().encode(
         longitude='lon:Q',
         latitude='lat:Q'
     )
